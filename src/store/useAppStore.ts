@@ -1,40 +1,43 @@
 import { create } from "zustand";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark";
 
 type AppStore = {
-    theme: Theme;
-    setTheme: (theme: Theme) => void;
-    toggleTheme: () => void
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 };
 
 const getInitialTheme = (): Theme => {
-    const saved = localStorage.getItem("theme") as Theme | null;
-    if (saved) return saved;
+  const saved = localStorage.getItem("theme") as Theme | null;
+  if (saved) return saved;
 
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
-    : "light"
+    : "light";
 };
 
 export const useAppStore = create<AppStore>((set) => ({
-    theme: getInitialTheme(),
-    setTheme: (theme) => {
-        document.documentElement.classList.remove("light", "dark");
-        document.documentElement.classList.add(theme);
+  theme: getInitialTheme(),
 
-        localStorage.setItem("theme", theme);
-        set({ theme });
-        
-    },
-toggleTheme: () => 
+  setTheme: (theme) => {
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+
+    localStorage.setItem("theme", theme);
+
+    set({ theme });
+  },
+
+  toggleTheme: () =>
     set((state) => {
-        const newTheme = state.theme === "light" ? "dark" : "light";
+      const newTheme = state.theme === "light" ? "dark" : "light";
 
-        document.documentElement.classList.remove("light", "dark");
-        document.documentElement.classList.add(newTheme)
-        localStorage.setItem("theme", newTheme);
-        return{theme: newTheme};
+      document.documentElement.classList.remove("light", "dark");
+      document.documentElement.classList.add(newTheme);
+
+      localStorage.setItem("theme", newTheme);
+
+      return { theme: newTheme };
     }),
-
-}));
+}))
