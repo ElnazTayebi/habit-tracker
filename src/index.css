@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* Light */
+:root {
+    --bg: 255 255 255;
+    --text: 0 0 0;
+    --card: 245 245 245;
+}
+
+/* Dark */
+.dark {
+    --bg: 17 24 39;
+    --text: 255 255 255;
+    --card: 31 41 55;
+}
+body {
+    background: rgb(var(--bg));
+    color: rgb(var(--text));
+}
