@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 
 export type Theme = "light" | "dark";
@@ -17,7 +18,7 @@ const getInitialTheme = (): Theme => {
     : "light";
 };
 
-export const useAppStore = create<AppStore>((set) => ({
+export const useThemeStore = create<AppStore>((set) => ({
   theme: getInitialTheme(),
 
   setTheme: (theme) => {
@@ -41,3 +42,4 @@ export const useAppStore = create<AppStore>((set) => ({
       return { theme: newTheme };
     }),
 }))
+ 

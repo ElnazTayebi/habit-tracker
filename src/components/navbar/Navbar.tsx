@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Menu, X, Sun, Moon } from "lucide-react";
-import { useAppStore } from "../../store/useAppStore";
+import { useThemeStore } from "../../store/useThemeStore";
 
 export default function Navbar() {
   // Global theme state from Zustand
-  const { theme, toggleTheme } = useAppStore();
+  const { theme, toggleTheme } = useThemeStore();
 
   // Local state for mobile menu toggle
   const [open, setOpen] = useState(false);
@@ -42,7 +42,7 @@ export default function Navbar() {
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded border border-[rgb(var(--card))] hover:opacity-80 transition"
+           
           >
             {/* Show icon based on current theme */}
             {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}

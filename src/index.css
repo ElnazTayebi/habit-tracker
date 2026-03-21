@@ -64,3 +64,7 @@
   --progress-bg: 51 65 85;
   --progress-fill: 129 140 248;
 }
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+}
