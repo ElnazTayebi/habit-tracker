@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { useThemeStore } from "../../store/useThemeStore";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   // Global theme state from Zustand
@@ -8,19 +9,22 @@ export default function Navbar() {
 
   // Local state for mobile menu toggle
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate()
 
   return (
     <header className="w-full border-b border-[rgb(var(--card))] bg-[rgb(var(--card))]">
-      
+
       {/* Container */}
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
 
         {/* Logo Section */}
         <div className="flex items-center gap-2">
+          <Link to="/">
           <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
             ✔
           </div>
           <span className="font-semibold text-lg">HabitTrack</span>
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
@@ -42,14 +46,16 @@ export default function Navbar() {
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-           
+
           >
             {/* Show icon based on current theme */}
             {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
           {/* Login Button */}
-          <button className="px-4 py-1.5 rounded border border-[rgb(var(--card))]">
+          <button
+            onClick={() => navigate("/login")}
+            className="px-4 py-1.5 rounded border border-[rgb(var(--card))]">
             Login
           </button>
 
@@ -95,7 +101,13 @@ export default function Navbar() {
           </button>
 
           {/* Login */}
-          <button className="px-4 py-2 rounded border border-[rgb(var(--card))]">
+          <button
+            onClick={() => {
+              navigate("/login");
+              setOpen(false);
+            }}
+            className="px-4 py-2 rounded border border-[rgb(var(--card))]"
+          >
             Login
           </button>
 

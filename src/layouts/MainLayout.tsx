@@ -1,26 +1,19 @@
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/navbar/Navbar";
 
-import type { ReactNode } from "react";
-
-
-type Props = {
-  children: ReactNode;
-};
-
-export default function MainLayout({ children }: Props) {
-
-
+export default function MainLayout() {
   return (
     <div className="min-h-screen">
-      
+
       {/* Header */}
       <header className="flex justify-between items-center border-[rgb(var(--card))]">
-        
 
+        <Navbar />
       </header>
 
       {/* Content */}
       <main>
-        {children}
+        <Outlet />
       </main>
 
     </div>

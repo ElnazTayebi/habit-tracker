@@ -1,9 +1,12 @@
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Label from "../ui/Label";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 
 const LoginForm = () => {
+    const [showPassword, setShowPassword] = useState(false);
     return (
         <div className="w-full max-w-sm space-y-6 p-6 bg-[rgb(var(--card))] rounded-xl shadow">
             {/*  Logo */}
@@ -21,9 +24,9 @@ const LoginForm = () => {
             <form className="space-y-4">
                 <div>
                     <Label htmlFor="email">Email adress</Label>
-                    <Input 
-                    className="w-full p-2 rounded bg-[rgb(var(--card-muted))] text-[rgb(var(--text))]"
-                    id="email" type="email" placeholder="Enter email" />
+                    <Input
+                        className="w-full p-2 rounded bg-[rgb(var(--card-muted))] text-[rgb(var(--text))]"
+                        id="email" type="email" placeholder="Enter email" />
                 </div>
                 {/*  Password */}
                 <div>
@@ -36,14 +39,26 @@ const LoginForm = () => {
                             Forgot password?
                         </a>
                     </div>
-                    <Input 
-                    className="w-full p-2 rounded bg-[rgb(var(--card-muted))] text-[rgb(var(--text))]"
-                    id="password" type="password" placeholder="******" />
+                    <div className="relative">
+                        <Input
+                            className="w-full p-2 rounded bg-[rgb(var(--card-muted))] text-[rgb(var(--text))]"
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="******"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(prev => !prev)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-[rgb(var(--primary))]"
+                        >
+                            {showPassword ? (<EyeOff size={18} />) : (<Eye size={18} />)}
+                        </button>
+                    </div>
                 </div>
                 {/*   Button */}
-                <Button 
-                className="w-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] p-2 rounded"
-                type="submit">Sign in</Button>
+                <Button
+                    className="w-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] p-2 rounded"
+                    type="submit">Sign in</Button>
             </form>
 
             {/* Footer */}
