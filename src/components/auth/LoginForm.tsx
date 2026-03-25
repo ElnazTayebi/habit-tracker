@@ -3,10 +3,45 @@ import Button from "../ui/Button";
 import Label from "../ui/Label";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { loginUser } from "../services/auth"
+import { Link } from "react-router-dom";
 
 
 const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+
+        // basic validation
+        if (!email) {
+            setError("Email is required");
+            return;
+        }
+
+        if (!password) {
+            setError("Password is required");
+            return;
+        }
+
+        try {
+            const user = await loginUser(email, password);
+
+            console.log("Login successful", user);
+        } catch (err: any) {
+            if (err.code === "auth/user-not-found") {
+                setError("User not found");
+            } else if (err.code === "auth/wrong-password") {
+                setError("Wrong password");
+            } else {
+                setError("Something went wrong");
+            }
+        }
+    };
     return (
         <div className="w-full max-w-sm space-y-6 p-6 bg-[rgb(var(--card))] rounded-xl shadow">
             {/*  Logo */}
@@ -21,12 +56,16 @@ const LoginForm = () => {
                 Sign in to your account
             </h2>
             {/* Form */}
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleLogin}>
                 <div>
                     <Label htmlFor="email">Email adress</Label>
                     <Input
                         className="w-full p-2 rounded bg-[rgb(var(--card-muted))] text-[rgb(var(--text))]"
-                        id="email" type="email" placeholder="Enter email" />
+                        id="email"
+                        type="email"
+                        placeholder="Enter email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 {/*  Password */}
                 <div>
@@ -45,6 +84,8 @@ const LoginForm = () => {
                             id="password"
                             type={showPassword ? "text" : "password"}
                             placeholder="******"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                         />
                         <button
                             type="button"
@@ -59,16 +100,23 @@ const LoginForm = () => {
                 <Button
                     className="w-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] p-2 rounded"
                     type="submit">Sign in</Button>
+                {error &&
+                    (<p className="text-sm text-[rgb(var(--warning))]">
+                        {error}
+                    </p>
+
+                    )}
             </form>
 
             {/* Footer */}
-            <p className="text-center text-sm text-[rgb(var(--muted))]">
-                Not a member?{""}
-                <a
-                    href="#"
-                    className="text-[rgb(var(--primary))] font-medium">
-                    Start free trial
-                </a>
+            <p className="text-left text-sm text-[rgb(var(--muted))]">
+                Not a member?{" "}
+                <Link
+                    to="/signup"
+                    className="ml-1 text-[rgb(var(--primary))] font-semibold hover:opacity-80"
+                >
+                    Create account
+                </Link>
             </p>
         </div>
     )
