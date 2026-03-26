@@ -58,7 +58,7 @@ const SignOutForm = () => {
             </div>
 
             {/* Heading */}
-            <h2 className="text-2xl font-bold text-center">
+            <h2 className="text-2xl text-center">
                 Sign out
             </h2>
 

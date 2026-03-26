@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, Plus, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import NavLinks from "./NavLinks";
 import MobileMenu from "./MobileMenu";
@@ -31,9 +31,12 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
 
           {/* Desktop button */}
-          <button className="hidden md:flex px-3 py-1.5 rounded border border-[rgb(var(--border))]">
+          <Link 
+          to="/add-habit"
+          className="flex items-center gap-2 hidden md:flex px-3 py-1.5 rounded border border-[rgb(var(--border))]">
+            <Plus size={16} />
             Add Habit
-          </button>
+          </Link>
 
           {/* Avatar dropdown */}
           <AvatarDropdown />

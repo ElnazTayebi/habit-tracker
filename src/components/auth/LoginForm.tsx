@@ -102,7 +102,7 @@ const LoginForm = () => {
                 <span className="font-semibold text-lg">HabitTrack</span>
             </div>
 
-            <h2 className="mt-6 text-xl font-bold">
+            <h2 className="mt-6 text-xl">
                 Sign in to your account
             </h2>
 

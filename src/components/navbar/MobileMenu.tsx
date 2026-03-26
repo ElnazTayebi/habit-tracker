@@ -25,13 +25,17 @@ export default function MobileMenu({ open, setOpen }: Props) {
       {/* Navigation links */}
       <Link to="/" onClick={() => setOpen(false)}>Dashboard</Link>
       <Link to="/" onClick={() => setOpen(false)}>Reports</Link>
-     
+
 
       {/* Add habit button */}
-      <button className="flex items-center gap-2">
+      <Link
+        to="/add-habit"
+        className="flex items-center gap-2 block px-4 py-2"
+        onClick={() => setOpen(false)}
+      >
         <Plus size={16} />
         Add Habit
-      </button>
+      </Link>
 
       {/* Theme toggle */}
       <button onClick={toggleTheme} className="flex items-center gap-2">

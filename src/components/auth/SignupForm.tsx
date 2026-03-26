@@ -95,7 +95,7 @@ const SignupForm = () => {
         <span className="font-semibold text-lg">HabitTrack</span>
       </div>
 
-      <h2 className="mt-6 text-xl font-bold">
+      <h2 className="mt-6 text-xl">
         Create your account
       </h2>
 

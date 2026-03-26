@@ -12,7 +12,7 @@ type AuthStore = {
 
   signup: (email: string, password: string) => Promise<any>;
   login: (email: string, password: string) => Promise<any>;
-  logout: () => Promise<void>; // ← تغییر: logout async
+  logout: () => Promise<void>; // ← change: logout async
 };
 
 export const useAuthStore = create<AuthStore>((set) => ({
