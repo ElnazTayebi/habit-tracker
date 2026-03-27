@@ -106,7 +106,7 @@ const SignupForm = () => {
           <Label htmlFor="fullName">Full name</Label>
           <Input
             id="fullName"
-             placeholder="Joe Doe"
+            placeholder="Joe Doe"
             className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -121,7 +121,7 @@ const SignupForm = () => {
           <Label htmlFor="email">Email address</Label>
           <Input
             id="email"
-             placeholder="example@gmail.com"
+            placeholder="example@gmail.com"
             type="email"
             className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
             value={email}
@@ -133,8 +133,8 @@ const SignupForm = () => {
                 email: !value
                   ? "Email is required"
                   : validateEmail(value)
-                  ? ""
-                  : "Invalid email format",
+                    ? ""
+                    : "Invalid email format",
               }));
             }}
           />
@@ -149,7 +149,7 @@ const SignupForm = () => {
           <div className="relative">
             <Input
               id="password"
-               placeholder="******"
+              placeholder="******"
               type={showPassword ? "text" : "password"}
               className="w-full p-2 pr-10 rounded bg-[rgb(var(--card-muted))]"
               value={password}
@@ -162,8 +162,8 @@ const SignupForm = () => {
                   password: !value
                     ? "Password is required"
                     : valid.minLength
-                    ? ""
-                    : "Password must be at least 6 characters",
+                      ? ""
+                      : "Password must be at least 6 characters",
                 }));
               }}
             />
@@ -186,7 +186,7 @@ const SignupForm = () => {
           <div className="relative">
             <Input
               id="confirmPassword"
-               placeholder="******"
+              placeholder="******"
               type={showConfirmPassword ? "text" : "password"}
               className="w-full p-2 pr-10 rounded bg-[rgb(var(--card-muted))]"
               value={confirmPassword}
@@ -198,8 +198,8 @@ const SignupForm = () => {
                   confirmPassword: !value
                     ? "Please confirm your password"
                     : value !== password
-                    ? "Passwords do not match"
-                    : "",
+                      ? "Passwords do not match"
+                      : "",
                 }));
               }}
             />
