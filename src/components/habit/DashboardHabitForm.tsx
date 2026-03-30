@@ -26,7 +26,8 @@ const Dashboard = () => {
           habitName: h.name,
         }))
       )
-      .filter(() => true);
+        .filter((task) => task.date === today) 
+         .sort((a, b) => a.time.localeCompare(b.time)); 
   }, [habits, today]);
 
   return (
