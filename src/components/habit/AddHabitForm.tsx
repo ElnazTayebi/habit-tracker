@@ -1,64 +1,68 @@
 import { useState, useRef, useEffect } from "react";
 import Input from "../ui/Input";
 import Label from "../ui/Label";
-import { ChevronDown, Plus, Check, Clock, Calendar } from "lucide-react";
+import { ChevronDown, Plus, Check, Calendar } from "lucide-react";
+import { useHabitStore, type Category } from "../../store/habit/useHabitStore"; // Use 'type' for Category import to avoid runtime issues
+//import { addHabitToFirebase } from "../../services/habitServise";
 
-// --- Types ---
-interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
-
-const initialCategories: Category[] = [
-  { id: "1", name: "Wellness", color: "rgb(var(--success))" },
-  { id: "2", name: "Education", color: "rgb(var(--warning))" },
-  { id: "3", name: "Mindfulness", color: "rgb(var(--primary))" },
-];
-
+/**
+ * --- Colors for Custom Categories ---
+ */
 const colors = [
-  "rgb(239 68 68)", "rgb(59 130 246)", "rgb(34 197 94)", "rgb(234 179 8)", "rgb(99 102 241)", 
-  "rgb(6 182 212)", "rgb(236 72 153)", "rgb(99 102 241)", "rgb(20 184 166)", "rgb(244 63 94)"
+    "rgb(239 68 68)", "rgb(59 130 246)", "rgb(34 197 94)", "rgb(234 179 8)", "rgb(99 102 241)",
+    "rgb(6 182 212)", "rgb(236 72 153)", "rgb(99 102 241)", "rgb(20 184 166)", "rgb(244 63 94)"
 ];
 
+/**
+ * --- Days of Week Labels ---
+ */
 const daysOfWeek = [
-  { label: "S", value: "Sun" },
-  { label: "M", value: "Mon" },
-  { label: "T", value: "Tue" },
-  { label: "W", value: "Wed" },
-  { label: "T", value: "Thu" },
-  { label: "F", value: "Fri" },
-  { label: "S", value: "Sat" },
+    { label: "S", value: "Sun" },
+    { label: "M", value: "Mon" },
+    { label: "T", value: "Tue" },
+    { label: "W", value: "Wed" },
+    { label: "T", value: "Thu" },
+    { label: "F", value: "Fri" },
+    { label: "S", value: "Sat" },
 ];
 
 const AddHabitForm = () => {
-    const [habitName, setHabitName] = useState("");
-    const [amount, setAmount] = useState("");
-    const [unit, setUnit] = useState("");
+    /**
+     * --- Zustand State ---
+     * Accessing global state and actions from the store.
+     */
+    const {
+        habitName, setHabitName,
+        amount, setAmount,
+        unit, setUnit,
+        selectedCategory, setSelectedCategory,
+        categories, addCategory,
+        frequency, setFrequency,
+        selectedDays, setSelectedDays,
+        reminders, setReminders,
+        // repeatInterval, setRepeatInterval,
+        startDate, setStartDate,
+        resetForm // This will be used after saving
+    } = useHabitStore();
 
-    // --- Category States ---
+    /**
+     * --- Local UI States ---
+     * These states are only for UI interactions (dropdowns, modals).
+     */
     const [isCatOpen, setIsCatOpen] = useState(false);
     const [isAddingNewCat, setIsAddingNewCat] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(initialCategories[0]);
     const [newCatName, setNewCatName] = useState("");
     const [newCatColor, setNewCatColor] = useState(colors[4]);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-    
-    // --- Frequency States ---
-    const [frequency, setFrequency] = useState<"Daily" | "Weekly">("Daily");
-    const [selectedDays, setSelectedDays] = useState<string[]>(["Mon", "Wed", "Fri"]);
-
-    // --- Reminder States ---
-    const [reminders, setReminders] = useState<string[]>(["08:00"]);
-    const [repeatInterval, setRepeatInterval] = useState("none");
-
-    // --- Start Date State ---
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const { saveHabit } = useHabitStore();
 
     const catDropdownRef = useRef<HTMLDivElement>(null);
     const colorPickerRef = useRef<HTMLDivElement>(null);
 
-    // Close dropdowns when clicking outside
+    /**
+     * --- Click Outside Logic ---
+     * Closes dropdowns when clicking outside the component.
+     */
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (catDropdownRef.current && !catDropdownRef.current.contains(event.target as Node)) {
@@ -72,9 +76,14 @@ const AddHabitForm = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    /**
+     * --- Helper Functions ---
+     */
     const toggleDay = (day: string) => {
-        setSelectedDays((prev) =>
-            prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+        setSelectedDays(
+            selectedDays.includes(day)
+                ? selectedDays.filter((d) => d !== day)
+                : [...selectedDays, day]
         );
     };
 
@@ -94,9 +103,31 @@ const AddHabitForm = () => {
         }
     };
 
+    const handleSaveNewCategory = () => {
+        if (newCatName.trim()) {
+            const newCat: Category = {
+                id: Date.now().toString(),
+                name: newCatName,
+                color: newCatColor
+            };
+            addCategory(newCat);
+            setSelectedCategory(newCat);
+            setIsAddingNewCat(false);
+            setNewCatName("");
+        }
+    };
+
+const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    await saveHabit();   // 👈 فقط همین
+
+    alert("Saved 🚀");
+};
+
     return (
         <div className="w-full max-w-sm space-y-6 p-6 bg-[rgb(var(--card))] rounded-[var(--radius)] shadow-lg mx-auto border border-[rgb(var(--border))]">
-            {/* Logo */}
+            {/* Logo Section */}
             <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-[rgb(var(--primary))] bg-opacity-20 flex items-center justify-center">
                     <Check size={16} className="text-[rgb(var(--primary))]" strokeWidth={3} />
@@ -108,8 +139,8 @@ const AddHabitForm = () => {
                 Add Habit
             </h2>
 
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                {/* Habit Name */}
+            <form className="space-y-6" onSubmit={handleSubmit}>
+                {/* Habit Name Input */}
                 <div className="space-y-2">
                     <Label htmlFor="habitName" className="text-[rgb(var(--text))]">Habit Name</Label>
                     <Input
@@ -121,7 +152,7 @@ const AddHabitForm = () => {
                     />
                 </div>
 
-                {/* Category (Hybrid Input) */}
+                {/* Hybrid Category Input */}
                 <div className="space-y-2" ref={catDropdownRef}>
                     <Label className="text-[rgb(var(--text))]">Category</Label>
                     <div className="relative">
@@ -133,8 +164,8 @@ const AddHabitForm = () => {
                             >
                                 <div className="flex items-center gap-3">
                                     {selectedCategory && (
-                                        <div 
-                                            className="w-3 h-3 rounded-full" 
+                                        <div
+                                            className="w-3 h-3 rounded-full"
                                             style={{ backgroundColor: selectedCategory.color }}
                                         />
                                     )}
@@ -176,14 +207,12 @@ const AddHabitForm = () => {
                                     placeholder="Category Name"
                                     value={newCatName}
                                     onChange={(e) => setNewCatName(e.target.value)}
+                                    onBlur={handleSaveNewCategory}
                                     className="w-full p-3 pl-10 rounded-[var(--radius)] bg-[rgb(var(--card-muted))] border-none text-[rgb(var(--text))]"
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setIsAddingNewCat(false);
-                                        setSelectedCategory(initialCategories[0]);
-                                    }}
+                                    onClick={() => setIsAddingNewCat(false)}
                                     className="absolute right-3 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--primary))]"
                                 >
                                     Cancel
@@ -191,9 +220,10 @@ const AddHabitForm = () => {
                             </div>
                         )}
 
+                        {/* Dropdown Menu */}
                         {isCatOpen && !isAddingNewCat && (
                             <div className="absolute z-20 top-full left-0 w-full mt-1 bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-[var(--radius)] shadow-lg overflow-hidden">
-                                {initialCategories.map((cat) => (
+                                {categories.map((cat) => (
                                     <button
                                         key={cat.id}
                                         type="button"
@@ -223,8 +253,8 @@ const AddHabitForm = () => {
                         )}
                     </div>
                 </div>
-                
-                {/* Goal */}
+
+                {/* Goal Section */}
                 <div className="space-y-4">
                     <h4 className="text-sm font-bold text-[rgb(var(--text))] uppercase tracking-wider">Goal</h4>
                     <div className="flex gap-4">
@@ -251,7 +281,7 @@ const AddHabitForm = () => {
                     </div>
                 </div>
 
-                {/* Frequency */}
+                {/* Frequency Selector */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <Label className="text-[rgb(var(--text))]">Frequency</Label>
@@ -261,11 +291,10 @@ const AddHabitForm = () => {
                                     key={type}
                                     type="button"
                                     onClick={() => setFrequency(type)}
-                                    className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
-                                        frequency === type
+                                    className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${frequency === type
                                             ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-md"
                                             : "text-[rgb(var(--muted))]"
-                                    }`}
+                                        }`}
                                 >
                                     {type}
                                 </button>
@@ -279,11 +308,10 @@ const AddHabitForm = () => {
                                     key={day.value}
                                     type="button"
                                     onClick={() => toggleDay(day.value)}
-                                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2 ${
-                                        selectedDays.includes(day.value)
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2 ${selectedDays.includes(day.value)
                                             ? "bg-[rgb(var(--primary))] border-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]"
                                             : "bg-transparent border-[rgb(var(--border))] text-[rgb(var(--muted))]"
-                                    }`}
+                                        }`}
                                 >
                                     {day.label}
                                 </button>
@@ -292,12 +320,12 @@ const AddHabitForm = () => {
                     )}
                 </div>
 
-                {/* Reminders */}
+                {/* Reminders Section */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <Label className="text-[rgb(var(--text))]">Reminders</Label>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={addReminder}
                             className="p-1.5 rounded-full bg-[rgb(var(--primary))] bg-opacity-10 text-[rgb(var(--primary))] hover:bg-opacity-20 transition-all"
                         >
@@ -307,15 +335,15 @@ const AddHabitForm = () => {
                     <div className="flex flex-wrap gap-2">
                         {reminders.map((time, index) => (
                             <div key={index} className="flex items-center gap-2 p-2.5 rounded-[var(--radius)] bg-[rgb(var(--card-muted))] border border-[rgb(var(--border))]">
-                                <Clock size={14} className="text-[rgb(var(--muted))]" />
-                                <input 
-                                    type="time" 
+                                {/* <Clock size={14} className="text-[rgb(var(--muted))]" /> */}
+                                <input
+                                    type="time"
                                     value={time}
                                     onChange={(e) => updateReminder(index, e.target.value)}
                                     className="bg-transparent text-sm font-medium outline-none text-[rgb(var(--text))]"
                                 />
                                 {reminders.length > 1 && (
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => removeReminder(index)}
                                         className="text-[rgb(var(--muted))] hover:text-[rgb(var(--danger))]"
@@ -326,7 +354,7 @@ const AddHabitForm = () => {
                             </div>
                         ))}
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
+                    {/*       <div className="flex items-center gap-2 mt-2">
                         <input 
                             type="checkbox" 
                             id="repeatInterval"
@@ -337,10 +365,10 @@ const AddHabitForm = () => {
                         <label htmlFor="repeatInterval" className="text-xs text-[rgb(var(--muted))] font-medium cursor-pointer">
                             Repeat every 1 hour
                         </label>
-                    </div>
+                    </div> */}
                 </div>
 
-                {/* Start Date */}
+                {/* Start Date Picker */}
                 <div className="space-y-2">
                     <Label className="text-[rgb(var(--text))]">Start Date</Label>
                     <div className="relative flex items-center">

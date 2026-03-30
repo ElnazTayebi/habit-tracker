@@ -6,7 +6,7 @@ export default function MainLayout() {
     <div className="min-h-screen">
 
       {/* Header */}
-      <header className="flex justify-between items-center border-[rgb(var(--card))]">
+     <header className="border-b border-[rgb(var(--border))]">
 
         <Navbar />
       </header>

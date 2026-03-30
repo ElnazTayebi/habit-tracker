@@ -4,6 +4,7 @@ import MainLayout from "../layouts/MainLayout";
 import SignupPage from "../pages/signup/SignupPage";
 import SignOutPage from "../pages/signout/SignoutPage";
 import AddHabitPage from "../pages/habits/AddHabitPage";
+import DashboardHabitPage from "../pages/habits/DashboardHabitPage";
 
 
 
@@ -11,11 +12,12 @@ const Router = () => {
     return (
         <Routes>
             <Route path="/" element={<MainLayout />}>
-                <Route index element={<div>Home</div>} />
+               <Route index element={<DashboardHabitPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/logout" element={<SignOutPage />} />
                 <Route path="/add-habit" element={<AddHabitPage />} />
+             
             </Route>
         </Routes>
     )
