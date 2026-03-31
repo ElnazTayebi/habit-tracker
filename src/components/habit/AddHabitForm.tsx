@@ -262,6 +262,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             <Label className="text-xs text-[rgb(var(--muted))]">Amount</Label>
                             <Input
                                 type="number"
+                                min={1}
                                 placeholder="30"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}

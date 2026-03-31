@@ -1,14 +1,21 @@
-import AppRouter from "./router/router"
+import { useEffect } from "react";
+import AppRouter from "./router/Router";
+import { useHabitStore } from "./store/habit/useHabitStore";
 
-import './App.css'
-
+import "./App.css";
 
 function App() {
+  const subscribeToHabits = useHabitStore((s) => s.subscribeToHabits);
 
-  return (
-   
-    <AppRouter />
-  )
+  useEffect(() => {
+    const unsub = subscribeToHabits();
+
+    return () => {
+      unsub(); // cleanup
+    };
+  }, []);
+
+  return <AppRouter />;
 }
 
-export default App
+export default App;
