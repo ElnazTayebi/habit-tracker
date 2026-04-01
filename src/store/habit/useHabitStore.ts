@@ -1,4 +1,4 @@
-import { create } from "zustand";
+/* import { create } from "zustand";
 import {
   collection,
   addDoc,
@@ -38,11 +38,12 @@ export interface Habit {
 }
 
 interface HabitState {
+  // form state
   habitName: string;
   amount: string;
   unit: string;
-
   selectedCategory: Category | null;
+
   categories: Category[];
 
   frequency: "Daily" | "Weekly";
@@ -52,6 +53,10 @@ interface HabitState {
 
   habits: Habit[];
 
+  // 🆕 EDIT STATE
+  editingHabit: Habit | null;
+
+  // setters
   setHabitName: (v: string) => void;
   setAmount: (v: string) => void;
   setUnit: (v: string) => void;
@@ -64,22 +69,37 @@ interface HabitState {
   setReminders: (v: string[]) => void;
   setStartDate: (v: string) => void;
 
+  // edit
+  setEditingHabit: (h: Habit | null) => void;
+  updateHabit: (habit: Habit) => Promise<void>;
+
+  // firebase
   subscribeToHabits: () => () => void;
 
   saveHabit: () => Promise<void>;
 
-  toggleHabitInstanceCompletion: (habitId: string, instanceId: string) => Promise<void>;
-  deleteHabitInstance: (habitId: string, instanceId: string) => Promise<void>;
+  toggleHabitInstanceCompletion: (
+    habitId: string,
+    instanceId: string
+  ) => Promise<void>;
+
+  deleteHabitInstance: (
+    habitId: string,
+    instanceId: string
+  ) => Promise<void>;
+
   deleteHabit: (habitId: string) => Promise<void>;
 
   resetForm: () => void;
 }
 
 export const useHabitStore = create<HabitState>((set, get) => ({
+  // ======================
+  // STATE
+  // ======================
   habitName: "",
   amount: "",
   unit: "",
-
   selectedCategory: null,
 
   categories: [
@@ -95,17 +115,53 @@ export const useHabitStore = create<HabitState>((set, get) => ({
 
   habits: [],
 
+  // 🆕 EDIT STATE
+  editingHabit: null,
+
+  // ======================
+  // SETTERS
+  // ======================
   setHabitName: (v) => set({ habitName: v }),
   setAmount: (v) => set({ amount: v }),
   setUnit: (v) => set({ unit: v }),
   setSelectedCategory: (c) => set({ selectedCategory: c }),
-  addCategory: (c) => set((s) => ({ categories: [...s.categories, c] })),
+
+  addCategory: (c) =>
+    set((s) => ({ categories: [...s.categories, c] })),
 
   setFrequency: (v) => set({ frequency: v }),
   setSelectedDays: (v) => set({ selectedDays: v }),
   setReminders: (v) => set({ reminders: v }),
   setStartDate: (v) => set({ startDate: v }),
 
+  // ======================
+  // EDIT FUNCTIONS
+  // ======================
+  setEditingHabit: (h) => set({ editingHabit: h }),
+
+  updateHabit: async (habit) => {
+    await updateDoc(doc(db, "habits", habit.id), {
+      name: habit.name,
+      category: habit.category,
+      goalAmount: habit.goalAmount,
+      goalUnit: habit.goalUnit,
+      frequency: habit.frequency,
+      selectedDays: habit.selectedDays,
+      reminders: habit.reminders,
+      startDate: habit.startDate,
+      scheduledInstances: habit.scheduledInstances,
+    });
+
+    set((state) => ({
+      habits: state.habits.map((h) =>
+        h.id === habit.id ? habit : h
+      ),
+    }));
+  },
+
+  // ======================
+  // FIREBASE
+  // ======================
   subscribeToHabits: () => {
     const ref = collection(db, "habits");
 
@@ -132,7 +188,9 @@ export const useHabitStore = create<HabitState>((set, get) => ({
       date.setDate(start.getDate() + i);
 
       const dateStr = date.toISOString().split("T")[0];
-      const day = date.toLocaleDateString("en-US", { weekday: "short" });
+      const day = date.toLocaleDateString("en-US", {
+        weekday: "short",
+      });
 
       if (state.selectedDays.includes(day)) {
         state.reminders.forEach((time) => {
@@ -167,7 +225,9 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     if (!habit) return;
 
     const updated = habit.scheduledInstances.map((i) =>
-      i.id === instanceId ? { ...i, completed: !i.completed } : i
+      i.id === instanceId
+        ? { ...i, completed: !i.completed }
+        : i
     );
 
     await updateDoc(doc(db, "habits", habitId), {
@@ -179,7 +239,9 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     const habit = get().habits.find((h) => h.id === habitId);
     if (!habit) return;
 
-    const updated = habit.scheduledInstances.filter((i) => i.id !== instanceId);
+    const updated = habit.scheduledInstances.filter(
+      (i) => i.id !== instanceId
+    );
 
     await updateDoc(doc(db, "habits", habitId), {
       scheduledInstances: updated,
@@ -190,15 +252,54 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     await deleteDoc(doc(db, "habits", habitId));
   },
 
+  // ======================
+  // RESET
+  // ======================
   resetForm: () =>
     set({
       habitName: "",
       amount: "",
       unit: "",
       frequency: "Daily",
-      selectedDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      selectedDays: [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun",
+      ],
       reminders: ["08:00"],
       startDate: new Date().toISOString().split("T")[0],
       selectedCategory: null,
     }),
+})); */
+import  {create} from "zustand";
+
+type Category = {
+  id: string;
+  name: string;
+};
+
+type HabitStore = {
+  habitName: string;
+  setHabitName: (v: string) => void;
+
+  categories: Category[];
+  selectedCategory: Category | null;
+  setSelectedCategory: (c: Category) => void;
+};
+
+export const useHabitStore = create<HabitStore>((set) => ({
+  habitName: "",
+  setHabitName: (v) => set({ habitName: v }),
+
+  categories: [
+    { id: "1", name: "Health" },
+    { id: "2", name: "Study" },
+  ],
+
+  selectedCategory: null,
+  setSelectedCategory: (c) => set({ selectedCategory: c }),
 }));

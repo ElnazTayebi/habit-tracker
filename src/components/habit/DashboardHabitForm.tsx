@@ -214,7 +214,8 @@ const DashboardHabitForm = () => {
                     className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
                       }`}
                   >
-                    <ChevronDown className="w-4 h-4 text-[rgb(var(--muted))]" />
+                    <ChevronDown className="w-4 h-4 " />
+                
                   </button>
 
                 </div>
