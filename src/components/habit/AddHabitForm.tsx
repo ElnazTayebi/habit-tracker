@@ -3,6 +3,7 @@ import Input from "../ui/Input";
 import Label from "../ui/Label";
 import { ChevronDown, Plus, Check, Calendar } from "lucide-react";
 import { useHabitStore, type Category } from "../../store/habit/useHabitStore"; // Use 'type' for Category import to avoid runtime issues
+import { useLocation } from "react-router-dom";
 //import { addHabitToFirebase } from "../../services/habitServise";
 
 /**
@@ -55,6 +56,10 @@ const AddHabitForm = () => {
     const [newCatColor, setNewCatColor] = useState(colors[4]);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
     const { saveHabit } = useHabitStore();
+    const location = useLocation();
+    const mode = location.state?.mode;
+    const habitId = location.state?.habitId;
+    const instanceId = location.state?.instanceId;
 
     const catDropdownRef = useRef<HTMLDivElement>(null);
     const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -117,13 +122,13 @@ const AddHabitForm = () => {
         }
     };
 
-const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    await saveHabit();   // 👈 فقط همین
+        await saveHabit();   // 👈 فقط همین
 
-    alert("Saved 🚀");
-};
+        alert("Saved 🚀");
+    };
 
     return (
         <div className="w-full max-w-sm space-y-6 p-6 bg-[rgb(var(--card))] rounded-[var(--radius)] shadow-lg mx-auto border border-[rgb(var(--border))]">
@@ -139,6 +144,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 Add Habit
             </h2>
 
+const isEditMode = mode === "edit";
             <form className="space-y-6" onSubmit={handleSubmit}>
                 {/* Habit Name Input */}
                 <div className="space-y-2">
@@ -293,8 +299,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     type="button"
                                     onClick={() => setFrequency(type)}
                                     className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${frequency === type
-                                            ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-md"
-                                            : "text-[rgb(var(--muted))]"
+                                        ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-md"
+                                        : "text-[rgb(var(--muted))]"
                                         }`}
                                 >
                                     {type}
@@ -310,8 +316,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     type="button"
                                     onClick={() => toggleDay(day.value)}
                                     className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2 ${selectedDays.includes(day.value)
-                                            ? "bg-[rgb(var(--primary))] border-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]"
-                                            : "bg-transparent border-[rgb(var(--border))] text-[rgb(var(--muted))]"
+                                        ? "bg-[rgb(var(--primary))] border-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]"
+                                        : "bg-transparent border-[rgb(var(--border))] text-[rgb(var(--muted))]"
                                         }`}
                                 >
                                     {day.label}

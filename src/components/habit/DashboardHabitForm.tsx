@@ -5,6 +5,9 @@ import {
   Clock,
   Edit,
   CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -19,6 +22,8 @@ const DashboardHabitForm = () => {
   } = useHabitStore();
 
   const navigate = useNavigate();
+
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-CA")
@@ -63,7 +68,7 @@ const DashboardHabitForm = () => {
   };
 
   return (
-    <div className="w-full mt-6 text-[rgb(var(--text))]">
+    <div className="w-full max-w-4xl mx-auto px-4 mt-6 text-[rgb(var(--text))]">
 
       {/* HEADER */}
       <div className="flex items-center justify-between mb-4">
@@ -77,13 +82,13 @@ const DashboardHabitForm = () => {
 
         <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted))]">
           <button onClick={goPrevDay} className="hover:opacity-70">
-            ◀
+            <ChevronLeft className="w-4 h-4" />
           </button>
 
           {selectedDate}
 
           <button onClick={goNextDay} className="hover:opacity-70">
-            ▶
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
@@ -133,99 +138,139 @@ const DashboardHabitForm = () => {
       {/* LIST */}
       <div className="space-y-3">
 
-        {tasks.map((t) => (
-          <div
-            key={t.id}
-            className="flex items-start justify-between p-3 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] shadow-sm"
-          >
+        {tasks.map((t) => {
+          const isOpen = openId === t.id;
 
-            {/* LEFT */}
-            <div className="flex items-start gap-3">
+          return (
+            <div
+              key={t.id}
+              className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] overflow-hidden"
+            >
 
-              <button
-                onClick={() =>
-                  toggleHabitInstanceCompletion(t.habitId, t.id)
-                }
-              >
-                {t.completed ? (
-                  <CheckSquare className="w-5 h-5 text-[rgb(var(--success))]" />
-                ) : (
-                  <Square className="w-5 h-5 text-[rgb(var(--muted))]" />
-                )}
-              </button>
+              {/* HEADER */}
+              <div className="flex items-center justify-between px-4 py-3">
 
-              <div>
+                {/* LEFT */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      toggleHabitInstanceCompletion(t.habitId, t.id)
+                    }
+                  >
+                    {t.completed ? (
+                      <CheckSquare className="w-5 h-5 text-[rgb(var(--primary))]" />
+                    ) : (
+                      <Square className="w-5 h-5 text-[rgb(var(--muted))]" />
+                    )}
+                  </button>
 
-                <div
-                  className={`text-sm font-medium ${
-                    t.completed
-                      ? "line-through text-[rgb(var(--muted))]"
-                      : ""
-                  }`}
-                >
-                  {t.habitName}
+                  <div className="flex flex-col">
+                    <span className="text-base font-medium">
+                      {t.habitName}
+                    </span>
+
+                    <span className="text-xs text-[rgb(var(--muted))] flex items-center gap-1 mt-1">
+                      <Clock className="w-3 h-3" />
+                      {t.time}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="text-xs text-[rgb(var(--muted))] flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {t.time}
-                </div>
+                {/* RIGHT */}
+                <div className="flex items-center gap-3">
 
+                  {/* actions فقط وقتی بازه */}
+
+                  <>
+                    <button
+                      onClick={() =>
+                        navigate("/add-habit", {
+                          state: {
+                            mode: "edit",
+                            habitId: t.habitId,
+                            instanceId: t.id,
+                          },
+                        })
+                      }
+                    >
+                      <Edit className="w-4 h-4 text-[rgb(var(--primary))]" />
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        deleteHabitInstance(t.habitId, t.id)
+                      }
+                    >
+                      <Trash2 className="w-4 h-4 text-[rgb(var(--danger))]" />
+                    </button>
+                  </>
+
+
+                  {/* dropdown toggle */}
+                  <button
+                    onClick={() =>
+                      setOpenId(isOpen ? null : t.id)
+                    }
+                    className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                      }`}
+                  >
+                    <ChevronDown className="w-4 h-4 text-[rgb(var(--muted))]" />
+                  </button>
+
+                </div>
               </div>
-            </div>
 
-            {/* EXTRA */}
-            <div className="text-[11px] text-[rgb(var(--muted))] mt-1 space-y-1">
+              {/* DROPDOWN CONTENT */}
+              {isOpen && (
+                <div className="border-t border-[rgb(var(--border))] px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-[rgb(var(--text))]">
 
-              {t.category && (
-                <div className="flex items-center gap-1">
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: t.category.color }}
-                  />
-                  {t.category.name}
+                  {/* CATEGORY */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-[rgb(var(--muted))]">
+                      Category
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {t.category && (
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: t.category.color }}
+                        />
+                      )}
+                      <span>{t.category?.name || "-"}</span>
+                    </div>
+                  </div>
+
+                  {/* GOAL */}
+                  <div className="flex flex-col gap-1 border-l pl-4 border-[rgb(var(--border))]">
+                    <span className="text-xs text-[rgb(var(--muted))]">
+                      Goal
+                    </span>
+                    <span>
+                      {t.goalAmount} {t.goalUnit}
+                    </span>
+                  </div>
+
+                  {/* FREQUENCY */}
+                  <div className="flex flex-col gap-1 border-l pl-4 border-[rgb(var(--border))]">
+                    <span className="text-xs text-[rgb(var(--muted))]">
+                      Frequency
+                    </span>
+                    <span>{t.frequency}</span>
+                  </div>
+
+                  {/* START DATE */}
+                  <div className="flex flex-col gap-1 border-l pl-4 border-[rgb(var(--border))]">
+                    <span className="text-xs text-[rgb(var(--muted))]">
+                      Start Date
+                    </span>
+                    <span>{t.startDate}</span>
+                  </div>
+
                 </div>
               )}
-
-              <div>🎯 {t.goalAmount} {t.goalUnit}</div>
-              <div>🔁 {t.frequency}</div>
-              <div>🚀 {t.startDate}</div>
-
-              {t.reminders?.length > 0 && (
-                <div>⏰ {t.reminders.join(", ")}</div>
-              )}
-
             </div>
-
-            {/* ACTIONS */}
-            <div className="flex items-center gap-2">
-
-              <button
-                onClick={() =>
-                  navigate("/add-habit", {
-                    state: {
-                      mode: "edit",
-                      habitId: t.habitId,
-                      instanceId: t.id,
-                    },
-                  })
-                }
-              >
-                <Edit className="w-4 h-4 text-[rgb(var(--primary))]" />
-              </button>
-
-              <button
-                onClick={() =>
-                  deleteHabitInstance(t.habitId, t.id)
-                }
-              >
-                <Trash2 className="w-4 h-4 text-[rgb(var(--danger))]" />
-              </button>
-
-            </div>
-
-          </div>
-        ))}
+          );
+        })}
 
       </div>
     </div>

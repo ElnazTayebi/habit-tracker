@@ -9,7 +9,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="w-full border-b border-[rgb(var(--border))] bg-[rgb(var(--card))]">
+    <header className="w-full max-w-4xl mx-auto  border-[rgb(var(--border))] ">
       
       {/* Main container */}
       <div className="w-full px-6 py-3 flex items-center justify-between">
