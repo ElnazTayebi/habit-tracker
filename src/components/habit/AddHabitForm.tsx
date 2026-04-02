@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import Input from "../ui/Input";
 import Label from "../ui/Label";
 import Button from "../ui/Button";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useHabitStore } from "../../store/habit/useHabitStore";
 
 const daysOfWeek = [
@@ -53,7 +53,7 @@ const AddHabitForm = () => {
         } else {
             resetForm();
         }
-    }, [editingHabit, location]);
+    }, [editingHabit]);
     const toggleDay = (day: string) => {
         setSelectedDays(
             selectedDays.includes(day)
@@ -87,33 +87,38 @@ const AddHabitForm = () => {
             </div>
 
             {/* TITLE */}
-            <h2 className="text-xl font-bold mb-6">
+            <h2 className="text-xl font-semibold mb-6">
                 {editingHabit ? "Edit Habit" : "Add Habit"}
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-8">
 
                 {/* NAME */}
                 <div>
-                    <Label>Habit Name</Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Habit Name</Label>
                     <Input
+                    placeholder="e.g. Morning Meditation"
                         value={habitName}
                         onChange={(e) => setHabitName(e.target.value)}
+                        className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
+                        
 
                     />
                 </div>
 
                 {/* CATEGORY */}
                 <div ref={catRef} className="relative">
-                    <Label>Category</Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Category</Label>
 
                     <Button
                         type="button"
                         variant="outline"
-                        className="w-full justify-between"
+                        className="w-full h-12 justify-between text-left"
                         onClick={() => setIsCatOpen(!isCatOpen)}
+                        
                     >
                         {selectedCategory?.name || "Select category"}
+                        <span className="text-gray-400">▼</span>
                     </Button>
 
                     {isCatOpen && (
@@ -126,7 +131,7 @@ const AddHabitForm = () => {
                                         setSelectedCategory(cat);
                                         setIsCatOpen(false);
                                     }}
-                                    className="w-full text-left px-3 py-2 hover:bg-[rgb(var(--card-muted))]"
+                                    className="w-full text-left px-3 py-3 hover:bg-[rgb(var(--card-muted))]"
                                 >
                                     {cat.name}
                                 </button>
@@ -136,26 +141,32 @@ const AddHabitForm = () => {
                 </div>
 
                 {/* GOAL */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label>Amount</Label>
-                        <Input value={amount} onChange={(e) => setAmount(e.target.value)} />
+                        <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Amount</Label>
+                        <Input value={amount} 
+                        onChange={(e) => setAmount(e.target.value)} 
+                        className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
+                        />
                     </div>
 
                     <div>
-                        <Label>Unit</Label>
-                        <Input value={unit} onChange={(e) => setUnit(e.target.value)} />
+                        <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Unit</Label>
+                        <Input value={unit} onChange={(e) => setUnit(e.target.value)} 
+                        className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
+                        />
                     </div>
                 </div>
 
                 {/* FREQUENCY */}
                 <div>
-                    <Label>Frequency</Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Frequency</Label>
                     <div className="flex gap-2 mt-2">
                         <Button
                             type="button"
                             variant={frequency === "Daily" ? "primary" : "outline"}
                             onClick={() => setFrequency("Daily")}
+                            className="px-6 py-2 rounded-[10px]"
                         >
                             Daily
                         </Button>
@@ -164,6 +175,7 @@ const AddHabitForm = () => {
                             type="button"
                             variant={frequency === "Weekly" ? "primary" : "outline"}
                             onClick={() => setFrequency("Weekly")}
+                            className="px-6 py-2 rounded-[10px]"
                         >
                             Weekly
                         </Button>
@@ -188,9 +200,10 @@ const AddHabitForm = () => {
 
                 {/* REMINDERS */}
                 <div>
-                    <Label>Reminders</Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Reminders</Label>
 
                     {reminders.map((r, i) => (
+                        <div className="flex items-center gap-2" >
                         <Input
                             key={i}
                             type="time"
@@ -200,8 +213,20 @@ const AddHabitForm = () => {
                                 copy[i] = e.target.value;
                                 setReminders(copy);
                             }}
-                            className="mb-2"
+                             className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
                         />
+                        <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                        const filtered = reminders.filter((_, index) => index !== i);
+                        setReminders(filtered);
+                    }}
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                >
+                    <X size={18} />
+                </Button>
+                        </div>
                     ))}
 
                     <Button
@@ -215,11 +240,12 @@ const AddHabitForm = () => {
 
                 {/* DATE */}
                 <div>
-                    <Label>Start Date</Label>
+                    <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Start Date</Label>
                     <Input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
+                         className="w-full p-2 rounded bg-[rgb(var(--card-muted))]"
                     />
                 </div>
                 <div className="flex gap-2 mt-2">

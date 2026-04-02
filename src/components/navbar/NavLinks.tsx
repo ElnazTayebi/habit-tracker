@@ -1,8 +1,16 @@
 import { Link } from "react-router-dom";
 
-export default function NavLinks() {
+type Props = {
+  direction?: "row" | "col";
+  onClick?: () => void;
+}
+export default function NavLinks({direction = "row", onClick}:Props) {
   return (
-    <nav className="flex items-center gap-6 text-sm">
+    <nav 
+    className={`
+    flex 
+    ${direction === "row" ? "items-center gap-6" : "flex-col gap-4"}
+    text-sm`}>
 
       {/* Navigation links */}
       <Link to="/" className="hover:opacity-70">

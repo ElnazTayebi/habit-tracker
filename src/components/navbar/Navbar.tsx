@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { Menu, Plus, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import NavLinks from "./NavLinks";
 import MobileMenu from "./MobileMenu";
 import AvatarDropdown from "./AvatarDropdown";
+import { useHabitStore } from "../../store/habit/useHabitStore";
+
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const setEditingHabit = useHabitStore((s) => s.setEditingHabit)
+  const navigate = useNavigate();
 
   return (
     <header className="w-full max-w-4xl mx-auto  border-[rgb(var(--border))] ">
@@ -31,12 +36,16 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
 
           {/* Desktop button */}
-          <Link 
-          to="/add-habit"
+          <button 
+          onClick={() => {
+            setEditingHabit(null);
+            navigate("/add-habit")
+          }}
+          
           className="flex items-center gap-2 hidden md:flex px-3 py-1.5 rounded border border-[rgb(var(--border))]">
             <Plus size={16} />
             Add Habit
-          </Link>
+          </button>
 
           {/* Avatar dropdown */}
           <AvatarDropdown />
