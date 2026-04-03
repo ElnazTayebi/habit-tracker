@@ -15,12 +15,14 @@ import { useNavigate } from "react-router-dom";
 import { useHabitStore } from "../../store/habit/useHabitStore";
 import { useMemo, useState } from "react";
 
+
 const DashboardHabitForm = () => {
   const {
     habits,
     setEditingHabit,
     toggleHabitInstanceCompletion,
     deleteHabitInstance,
+    deleteHabit,
   } = useHabitStore();
 
   const navigate = useNavigate();
@@ -37,26 +39,45 @@ const DashboardHabitForm = () => {
 
   // ✅ FIX 2: safe + clean tasks
   const tasks = useMemo(() => {
-    return (habits || [])
-      .flatMap((habit) =>
-        Array.isArray(habit.scheduledInstances)
-          ? habit.scheduledInstances.map((instance) => ({
-            ...instance,
-            habitId: habit.id,
-            habitName: habit.name,
+    console.log("🧠 served DATA", habits);
+    const filteredTask =  (habits || [])
+      console.log("🧠 RAW HABITS:", habits);
 
-            category: habit.category ?? null,
-            goalAmount: habit.goalAmount ?? "-",
-            goalUnit: habit.goalUnit ?? "",
-            frequency: habit.frequency ?? "-",
-            selectedDays: habit.selectedDays ?? [],
-            reminders: habit.reminders ?? [],
-            startDate: habit.startDate ?? "-",
-          }))
-          : []
-      )
-      .filter((t) => t.date === selectedDate);
-  }, [habits, selectedDate]);
+  (habits || []).forEach((habit) => {
+    console.log("👉 HABIT ID:", habit.id);
+    console.log(
+      "👉 isArray:",
+      Array.isArray(habit.scheduledInstances)
+    );
+  });
+
+  const mapped = (habits || []).flatMap((habit) => {
+    
+
+   
+
+    return  ({
+      id: habit.id, // 🔥 derived id
+      habitId: habit.id,
+      habitName: habit.name,
+      date: habit.startDate,
+      completed: false, // we'll fix this later
+      schaduledInstances : habit.scheduledInstances,
+      category: habit.category ?? null,
+      goalAmount: habit.goalAmount ?? "-",
+      goalUnit: habit.goalUnit ?? "",
+      frequency: habit.frequency ?? "-",
+      selectedDays: habit.selectedDays ?? [],
+      reminders: habit.reminders ?? [],
+      
+      startDate: habit.startDate ?? "-",
+    });
+   
+  });
+
+  console.log("🧠 FINAL TASKS:", mapped);
+  return  mapped.filter((t) => t.date === selectedDate);;
+}, [habits, selectedDate]);
 
   const progress = useMemo(() => {
     if (!tasks.length) return 0;
@@ -76,6 +97,8 @@ const DashboardHabitForm = () => {
     date.setDate(date.getDate() - 1);
     setSelectedDate(formatDate(date));
   };
+
+
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 mt-6 text-[rgb(var(--text))]">
@@ -139,11 +162,15 @@ const DashboardHabitForm = () => {
       </div>
 
       {/* LIST */}
+      <div> 
+      </div>
       <div className="space-y-4">
+         
 
-        {tasks.map((t) => {
+        {
+        tasks.map((t) => {
           const isOpen = openId === t.id;
-
+          console.log("this is my tasks", t);
           return (
             <div key={t.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
 
@@ -155,7 +182,7 @@ const DashboardHabitForm = () => {
                     onClick={() =>
                       toggleHabitInstanceCompletion(t.habitId, t.id)
                     }
-                     className="transition-transform active:scale-90"
+                    className="transition-transform active:scale-90"
                   >
                     {t.completed ? (
                       <CheckSquare className="w-6 h-6 text-green-500 fill-green-50" />
@@ -169,8 +196,8 @@ const DashboardHabitForm = () => {
 
                     {/* ✅ FIX 4: time safe */}
                     <div className="text-sm text-gray-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3.5 h-3.5" />
-                      {t.time || "--:--"}
+                      <Clock className="w-3.5 h-3.5" />
+                      {t.schaduledInstances.at(0)?.time || "--:--"}
                     </div>
                   </div>
                 </div>
@@ -179,7 +206,7 @@ const DashboardHabitForm = () => {
                 <div className="flex gap-1 items-center">
 
                   <button
-                   className="p-2 text-gray-400 hover:text-[rgb(var(--primary))] hover:bg-blue-50 rounded-full transition-colors"
+                    className="p-2 text-gray-400 hover:text-[rgb(var(--primary))] hover:bg-blue-50 rounded-full transition-colors"
                     onClick={() => {
                       const habitToEdit = habits.find(h => h.id === t.habitId);
 
@@ -188,25 +215,28 @@ const DashboardHabitForm = () => {
                       navigate("/add-habit");
                     }}
                   >
-                    <Edit className="w-5 h-5"/>
+                    <Edit className="w-5 h-5" />
                   </button>
 
                   <button
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                    onClick={() =>
-                      deleteHabitInstance(t.habitId, t.id)
-                    }
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    onClick={async () => {
+                      console.log("CLICK DELETE → habitId:", t.habitId);
+                      console.log("CLICK DELETE → instanceId:", t.id);
+
+                      await deleteHabit(t.habitId);
+                    }}
                   >
-                    <Trash2 className="w-5 h-5"/>
+                    <Trash2 className="w-5 h-5" />
                   </button>
 
                   <button
-                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
                     onClick={() =>
                       setOpenId(isOpen ? null : t.id)
                     }
                   >
-                     {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </button>
 
                 </div>
@@ -216,7 +246,7 @@ const DashboardHabitForm = () => {
               {isOpen && (
                 <div className="px-4 pb-4 pt-2 border-t border-gray-50 bg-gray-50/30">
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    
+
                     <div className="flex flex-col gap-1">
                       <span className="text-gray-400 text-xs font-medium uppercase">Category</span>
                       <div className="flex items-center gap-2 text-gray-700">

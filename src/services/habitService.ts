@@ -1,4 +1,3 @@
-// services/habitService.ts
 import { db } from "../firebase";
 import {
   collection,
@@ -7,16 +6,22 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 
 const habitsCollection = collection(db, "habits");
 
-// ➕ Add habit
+// ➕ ADD
 export const addHabitToFirebase = async (habit: any) => {
-  return await addDoc(habitsCollection, habit);
+  const docRef = await addDoc(habitsCollection, habit);
+
+  return {
+    id: docRef.id, // ✅ Firebase ID
+    ...habit,
+  };
 };
 
-// 📥 Get habits once
+// 📥 GET
 export const getHabitsFromFirebase = async () => {
   const snapshot = await getDocs(habitsCollection);
 
@@ -26,19 +31,30 @@ export const getHabitsFromFirebase = async () => {
   }));
 };
 
-// 🔥 REALTIME SUBSCRIBE
+// 🔥 REALTIME
 export const subscribeToHabits = (callback: (data: any[]) => void) => {
   return onSnapshot(habitsCollection, (snapshot) => {
     const data = snapshot.docs.map((doc) => ({
-      id: doc.id,
+      id: doc.id, // ✅ مهم
       ...doc.data(),
     }));
 
+    console.log("📡 SNAPSHOT:", data);
     callback(data);
   });
 };
 
-// ❌ delete instance (اگر instance-level داری)
-export const deleteHabitInstanceFromFirebase = async (id: string) => {
+// ✏️ UPDATE
+export const updateHabitInFirebase = async (id: string, updatedHabit: any) => {
+  console.log("🔥 UPDATE:", id);
+
+  const ref = doc(db, "habits", id);
+  await updateDoc(ref, updatedHabit);
+};
+
+// ❌ DELETE
+export const deleteHabitFromFirebase = async (id: string) => {
+  console.log("🔥 DELETE:", id);
+
   await deleteDoc(doc(db, "habits", id));
 };
