@@ -6,7 +6,10 @@ import {
   deleteHabitFromFirebase,
 } from "../../services/habitService";
 
-/* ================= TYPES ================= */
+
+/* =========================
+   TYPES
+========================= */
 
 type Category = {
   id: string;
@@ -34,9 +37,12 @@ export type Habit = {
   scheduledInstances: HabitInstance[];
 };
 
-/* ================= STORE TYPE ================= */
+/* =========================
+   STORE TYPE
+========================= */
 
 type HabitStore = {
+  // Form State
   habitName: string;
   amount: string;
   unit: string;
@@ -48,9 +54,11 @@ type HabitStore = {
   reminders: string[];
   startDate: string;
 
+  // Data State
   editingHabit: Habit | null;
   habits: Habit[];
 
+  // Setters
   setHabitName: (v: string) => void;
   setAmount: (v: string) => void;
   setUnit: (v: string) => void;
@@ -61,34 +69,51 @@ type HabitStore = {
   setStartDate: (v: string) => void;
   setEditingHabit: (v: Habit | null) => void;
 
+  // Actions
   resetForm: () => void;
   saveHabit: () => Promise<void>;
 
-  toggleHabitInstanceCompletion: (habitId: string, instanceId: string) => Promise<void>;
-  deleteHabitInstance: (habitId: string, instanceId: string) => Promise<void>;
+  toggleHabitCompletionForDate: (
+    habitId: string,
+    instanceId: string
+  ) => Promise<void>;
+
+  deleteHabitInstance: (
+    habitId: string,
+    instanceId: string
+  ) => Promise<void>;
+
   deleteHabit: (habitId: string) => Promise<void>;
 
   subscribeToHabits: () => () => void;
 };
 
-/* ================= HELPERS ================= */
+/* =========================
+   HELPERS
+========================= */
 
+// Ensure array safety
 const normalizeArray = (arr: any) =>
   Array.isArray(arr) ? arr : [];
 
+// Clean reminders (remove duplicates + trim)
 const normalizeReminders = (reminders: any) =>
   Array.isArray(reminders)
     ? [...new Set(reminders.map((r: string) => r.trim()).filter(Boolean))]
     : [];
 
-/* ================= STORE ================= */
+/* =========================
+   STORE
+========================= */
 
 export const useHabitStore = create<HabitStore>((set, get) => ({
-  /* ---------- STATE ---------- */
+  /* ---------- INITIAL STATE ---------- */
+
   habitName: "",
   amount: "",
   unit: "",
   selectedCategory: null,
+
   categories: [
     { id: "1", name: "Health" },
     { id: "2", name: "Study" },
@@ -104,21 +129,26 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
   habits: [],
 
   /* ---------- SETTERS ---------- */
+
   setHabitName: (v) => set({ habitName: v }),
   setAmount: (v) => set({ amount: v }),
   setUnit: (v) => set({ unit: v }),
   setSelectedCategory: (v) => set({ selectedCategory: v }),
+
   setFrequency: (v) =>
     set({
       frequency: v,
+      // Reset days if switching to Daily
       selectedDays: v === "Daily" ? [] : get().selectedDays,
     }),
+
   setSelectedDays: (v) => set({ selectedDays: v }),
   setReminders: (v) => set({ reminders: v }),
   setStartDate: (v) => set({ startDate: v }),
   setEditingHabit: (v) => set({ editingHabit: v }),
 
-  /* ---------- RESET ---------- */
+  /* ---------- RESET FORM ---------- */
+
   resetForm: () =>
     set({
       habitName: "",
@@ -131,7 +161,8 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       startDate: "",
     }),
 
-  /* ---------- SAVE ---------- */
+  /* ---------- SAVE HABIT ---------- */
+
   saveHabit: async () => {
     const state = get();
 
@@ -140,21 +171,31 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     const today =
       state.startDate || new Date().toISOString().split("T")[0];
 
-    const instances: HabitInstance[] = cleanReminders.map((time) => ({
-      id: crypto.randomUUID(),
-      date: today,
-      time,
-      completed: false,
-    }));
+    const instances: HabitInstance[] = [];
+    for (let i = 0; i < 7; i++) {
+      const dateObj = new Date(today);
+      dateObj.setDate(dateObj.getDate() + i);
+
+      const currentDate = dateObj.toISOString().split("T")[0];
+
+      cleanReminders.forEach((time) => {
+        instances.push({
+          id: `${habit.id}-${currentDate}-${time}`,
+          date: currentDate,
+          time,
+          completed: false,
+        })
+      })
+    }
 
     const habitData = {
       name: state.habitName.trim(),
-      goalAmount: state.amount.trim(),
-      goalUnit: state.unit.trim(),
-      category: state.selectedCategory,
+      //goalAmount: state.amount.trim(),
+      //goalUnit: state.unit.trim(),
+      //category: state.selectedCategory,
       frequency: state.frequency,
-      selectedDays:
-        state.frequency === "Weekly" ? state.selectedDays : [],
+      //selectedDays:
+      // state.frequency === "Weekly" ? state.selectedDays : [],
       reminders: cleanReminders,
       startDate: today,
       scheduledInstances: instances,
@@ -162,10 +203,8 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
 
     try {
       if (state.editingHabit) {
-        console.log("🔥 UPDATE HABIT", state.editingHabit.id);
         await updateHabitInFirebase(state.editingHabit.id, habitData);
       } else {
-        console.log("🔥 CREATE HABIT");
         await addHabitToFirebase(habitData);
       }
     } catch (err) {
@@ -173,7 +212,8 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     }
   },
 
-  /* ---------- SUBSCRIBE ---------- */
+  /* ---------- REALTIME SUBSCRIBE ---------- */
+
   subscribeToHabits: () => {
     const unsubscribe = firebaseSubscribe((data) => {
       console.log("📡 RAW SNAPSHOT", data);
@@ -192,7 +232,6 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
         reminders: normalizeReminders(h.reminders),
 
         startDate: h.startDate ?? "",
-
         scheduledInstances: normalizeArray(h.scheduledInstances),
       }));
 
@@ -204,23 +243,27 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     return unsubscribe;
   },
 
-  /* ---------- TOGGLE ---------- */
-  toggleHabitInstanceCompletion: async (habitId, instanceId) => {
+  /* ---------- TOGGLE COMPLETION ---------- */
+
+  toggleHabitCompletionForDate: async (habitId, instanceId) => {
     const state = get();
     const habit = state.habits.find((h) => h.id === habitId);
     if (!habit) return;
 
     const updatedInstances = habit.scheduledInstances.map((i) =>
-      i.id === instanceId ? { ...i, completed: !i.completed } : i
+      i.id === instanceId
+        ? { ...i, completed: !i.completed }
+        : i
     );
 
-   await updateHabitInFirebase(habitId, {
-  ...habit,
-  scheduledInstances: updatedInstances,
-});
+    await updateHabitInFirebase(habitId, {
+      ...habit,
+      scheduledInstances: updatedInstances,
+    });
   },
 
   /* ---------- DELETE INSTANCE ---------- */
+
   deleteHabitInstance: async (habitId, instanceId) => {
     const state = get();
     const habit = state.habits.find((h) => h.id === habitId);
@@ -236,21 +279,20 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
   },
 
   /* ---------- DELETE HABIT ---------- */
+
   deleteHabit: async (habitId) => {
-    
-  console.log("🔥 DELETE HABIT", habitId);
+    console.log("🔥 DELETE HABIT", habitId);
 
-  try {
-    await deleteHabitFromFirebase(habitId);
+    try {
+      await deleteHabitFromFirebase(habitId);
 
-    console.log("✅ FIREBASE DELETE CONFIRMED");
+      console.log("✅ FIREBASE DELETE CONFIRMED");
 
-    set((state) => ({
-      habits: state.habits.filter((h) => h.id !== habitId),
-    }));
-  } catch (err) {
-    console.error("❌ DELETE ERROR", err);
-    
-  }
-},
+      set((state) => ({
+        habits: state.habits.filter((h) => h.id !== habitId),
+      }));
+    } catch (err) {
+      console.error("❌ DELETE ERROR", err);
+    }
+  },
 }));
