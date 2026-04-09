@@ -21,19 +21,14 @@ import selectTasksByDate from "../../selectors/selectTasksByDate";
 const DashboardHabitForm = () => {
   const {
     habits,
+    completions,
     setEditingHabit,
-    toggleHabitCompletionForDate,
-    //deleteHabitInstance,
+    toggleCompletion,
     deleteHabit,
   } = useHabitStore();
 
-
-
   const navigate = useNavigate();
-
   const [openId, setOpenId] = useState<string | null>(null);
- 
-
 
   const formatDate = (date: Date) =>
     date.toISOString().split("T")[0];
@@ -42,19 +37,21 @@ const DashboardHabitForm = () => {
     formatDate(new Date())
   );
 
-const tasks = selectTasksByDate(habits, selectedDate);
-console.log("HABITS:", habits);
-console.log(habits[0]?.scheduledInstances);
-console.log("SELECTED DATE:", selectedDate);
-console.log("TASK DATE:", tasks[0]?.date);
+  // ✅ درست
+  const tasks = useMemo(() => {
+    return selectTasksByDate(
+      habits,
+      completions,
+      selectedDate
+    );
+  }, [habits, completions, selectedDate]);
+
   const progress = useMemo(() => {
     if (!tasks.length) return 0;
     const completed = tasks.filter((t) => t.completed).length;
     return Math.round((completed / tasks.length) * 100);
   }, [tasks]);
 
-
-  // ✅ FIX 3: date safe
   const goNextDay = () => {
     const date = new Date(selectedDate);
     date.setDate(date.getDate() + 1);
@@ -66,8 +63,7 @@ console.log("TASK DATE:", tasks[0]?.date);
     date.setDate(date.getDate() - 1);
     setSelectedDate(formatDate(date));
   };
-
-
+console.log("COMPLETIONS:", completions);
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 mt-6 text-[rgb(var(--text))]">
@@ -141,7 +137,7 @@ console.log("TASK DATE:", tasks[0]?.date);
             const isOpen = openId === t.id;
             console.log("this is my tasks", t);
             return (
-              <div key={t.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
+              <div key={`${t.id}-${t.completed}`} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
 
                 <div className="p-4 flex items-center justify-between">
 
@@ -149,7 +145,7 @@ console.log("TASK DATE:", tasks[0]?.date);
                   <div className="flex gap-4 items-center">
                     <button
                       onClick={() =>
-                        toggleHabitCompletionForDate(t.habitId, t.id)
+                        toggleCompletion(t.habitId, t.date, t.time)
                       }
                       className="transition-transform active:scale-90"
                     >

@@ -4,8 +4,10 @@ import {
   addHabitToFirebase,
   updateHabitInFirebase,
   deleteHabitFromFirebase,
+  addCompletionToFirebase,
+  deleteCompletionFromFirebase,
+  subscribeToCompletions as firebaseSubscribeCompletions,
 } from "../../services/habitService";
-
 
 /* =========================
    TYPES
@@ -15,13 +17,6 @@ type Category = {
   id: string;
   name: string;
   color?: string;
-};
-
-type HabitInstance = {
-  id: string;
-  date: string;
-  time: string;
-  completed: boolean;
 };
 
 export type Habit = {
@@ -34,7 +29,13 @@ export type Habit = {
   selectedDays: string[];
   reminders: string[];
   startDate: string;
-  scheduledInstances: HabitInstance[];
+};
+
+type CompletedInstance = {
+  id: string;
+  habitId: string;
+  date: string;
+  time: string;
 };
 
 /* =========================
@@ -42,7 +43,7 @@ export type Habit = {
 ========================= */
 
 type HabitStore = {
-  // Form State
+  // Form
   habitName: string;
   amount: string;
   unit: string;
@@ -54,9 +55,10 @@ type HabitStore = {
   reminders: string[];
   startDate: string;
 
-  // Data State
+  // Data
   editingHabit: Habit | null;
   habits: Habit[];
+  completions: CompletedInstance[];
 
   // Setters
   setHabitName: (v: string) => void;
@@ -73,30 +75,25 @@ type HabitStore = {
   resetForm: () => void;
   saveHabit: () => Promise<void>;
 
-  toggleHabitCompletionForDate: (
+  toggleCompletion: (
     habitId: string,
-    instanceId: string
-  ) => Promise<void>;
-
-  deleteHabitInstance: (
-    habitId: string,
-    instanceId: string
+    date: string,
+    time: string
   ) => Promise<void>;
 
   deleteHabit: (habitId: string) => Promise<void>;
 
   subscribeToHabits: () => () => void;
+  subscribeToCompletions: () => () => void;
 };
 
 /* =========================
    HELPERS
 ========================= */
 
-// Ensure array safety
 const normalizeArray = (arr: any) =>
   Array.isArray(arr) ? arr : [];
 
-// Clean reminders (remove duplicates + trim)
 const normalizeReminders = (reminders: any) =>
   Array.isArray(reminders)
     ? [...new Set(reminders.map((r: string) => r.trim()).filter(Boolean))]
@@ -107,7 +104,7 @@ const normalizeReminders = (reminders: any) =>
 ========================= */
 
 export const useHabitStore = create<HabitStore>((set, get) => ({
-  /* ---------- INITIAL STATE ---------- */
+  /* ---------- INITIAL ---------- */
 
   habitName: "",
   amount: "",
@@ -127,6 +124,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
 
   editingHabit: null,
   habits: [],
+  completions: [],
 
   /* ---------- SETTERS ---------- */
 
@@ -138,7 +136,6 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
   setFrequency: (v) =>
     set({
       frequency: v,
-      // Reset days if switching to Daily
       selectedDays: v === "Daily" ? [] : get().selectedDays,
     }),
 
@@ -147,7 +144,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
   setStartDate: (v) => set({ startDate: v }),
   setEditingHabit: (v) => set({ editingHabit: v }),
 
-  /* ---------- RESET FORM ---------- */
+  /* ---------- RESET ---------- */
 
   resetForm: () =>
     set({
@@ -171,34 +168,12 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     const today =
       state.startDate || new Date().toISOString().split("T")[0];
 
-    const instances: HabitInstance[] = [];
-    for (let i = 0; i < 7; i++) {
-      const dateObj = new Date(today);
-      dateObj.setDate(dateObj.getDate() + i);
-
-      const currentDate = dateObj.toISOString().split("T")[0];
-
-      cleanReminders.forEach((time) => {
-        instances.push({
-          id: `${habit.id}-${currentDate}-${time}`,
-          date: currentDate,
-          time,
-          completed: false,
-        })
-      })
-    }
-
     const habitData = {
       name: state.habitName.trim(),
-      //goalAmount: state.amount.trim(),
-      //goalUnit: state.unit.trim(),
-      //category: state.selectedCategory,
       frequency: state.frequency,
-      //selectedDays:
-      // state.frequency === "Weekly" ? state.selectedDays : [],
+      selectedDays: state.selectedDays,
       reminders: cleanReminders,
       startDate: today,
-      scheduledInstances: instances,
     };
 
     try {
@@ -212,30 +187,21 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     }
   },
 
-  /* ---------- REALTIME SUBSCRIBE ---------- */
+  /* ---------- SUBSCRIBE HABITS ---------- */
 
   subscribeToHabits: () => {
     const unsubscribe = firebaseSubscribe((data) => {
-      console.log("📡 RAW SNAPSHOT", data);
-
       const safeData: Habit[] = data.map((h) => ({
         id: h.id,
-
         name: h.name ?? "",
         goalAmount: h.goalAmount ?? "",
         goalUnit: h.goalUnit ?? "",
-
         category: h.category ?? null,
         frequency: h.frequency ?? "Daily",
-
         selectedDays: normalizeArray(h.selectedDays),
         reminders: normalizeReminders(h.reminders),
-
         startDate: h.startDate ?? "",
-        scheduledInstances: normalizeArray(h.scheduledInstances),
       }));
-
-      console.log("🧠 NORMALIZED DATA", safeData);
 
       set({ habits: safeData });
     });
@@ -243,50 +209,59 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     return unsubscribe;
   },
 
-  /* ---------- TOGGLE COMPLETION ---------- */
+  /* ---------- SUBSCRIBE COMPLETIONS ---------- */
 
-  toggleHabitCompletionForDate: async (habitId, instanceId) => {
-    const state = get();
-    const habit = state.habits.find((h) => h.id === habitId);
-    if (!habit) return;
-
-    const updatedInstances = habit.scheduledInstances.map((i) =>
-      i.id === instanceId
-        ? { ...i, completed: !i.completed }
-        : i
-    );
-
-    await updateHabitInFirebase(habitId, {
-      ...habit,
-      scheduledInstances: updatedInstances,
+  subscribeToCompletions: () => {
+    const unsubscribe = firebaseSubscribeCompletions((data) => {
+      set({ completions: data });
     });
+
+    return unsubscribe;
   },
 
-  /* ---------- DELETE INSTANCE ---------- */
+  /* ---------- TOGGLE COMPLETION ---------- */
 
-  deleteHabitInstance: async (habitId, instanceId) => {
+  toggleCompletion: async (habitId, date, time) => {
     const state = get();
-    const habit = state.habits.find((h) => h.id === habitId);
-    if (!habit) return;
 
-    const updatedInstances = habit.scheduledInstances.filter(
-      (i) => i.id !== instanceId
+    const existing = state.completions.find(
+      (c) =>
+        c.habitId === habitId &&
+        c.date === date &&
+        c.time === time
     );
 
-    await updateHabitInFirebase(habitId, {
-      scheduledInstances: updatedInstances,
-    });
+    if (existing) {
+      await deleteCompletionFromFirebase(existing.id);
+
+      set({
+        completions: state.completions.filter(
+          (c) => c.id !== existing.id
+        ),
+      });
+    } else {
+      const newCompletion = {
+        habitId,
+        date,
+        time,
+      };
+console.log("🔥 ADDING COMPLETION:", newCompletion);
+      const saved = await addCompletionToFirebase(newCompletion);
+
+console.log("✅ SAVED:", saved);
+      set({
+        completions: [...state.completions, saved],
+      });
+      
+console.log("AFTER SET:", get().completions);
+    }
   },
 
   /* ---------- DELETE HABIT ---------- */
 
   deleteHabit: async (habitId) => {
-    console.log("🔥 DELETE HABIT", habitId);
-
     try {
       await deleteHabitFromFirebase(habitId);
-
-      console.log("✅ FIREBASE DELETE CONFIRMED");
 
       set((state) => ({
         habits: state.habits.filter((h) => h.id !== habitId),

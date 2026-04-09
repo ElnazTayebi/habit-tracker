@@ -8,21 +8,67 @@ type Task = {
   startDate: string;
 };
 
-const selectTasksByDate = (habits: any[], selectedDate: string): Task[] => {
-  return (habits || []).flatMap((habit) => {
-    if (!Array.isArray(habit.scheduledInstances)) return [];
+const getDayName = (dateString: string) => {
+  const date = new Date(dateString);
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return days[date.getDay()];
+};
 
-    return habit.scheduledInstances
-      .filter((instance: any) => instance.date === selectedDate)
-      .map((instance: any) => ({
-        id: instance.id, // ✅ از instance
+const selectTasksByDate = (
+  habits: any[],
+  completions: any[],
+  selectedDate: string
+): Task[] => {
+  const dayName = getDayName(selectedDate);
+
+  return (habits || []).flatMap((habit) => {
+    // ⛔ اگر قبل از startDate هست → نشون نده
+    if (selectedDate < habit.startDate) return [];
+
+    // ✅ بررسی اجرا شدن
+    const shouldRun =
+      habit.frequency === "Daily" ||
+      (habit.frequency === "Weekly" &&
+        habit.selectedDays?.includes(dayName));
+
+    if (!shouldRun) return [];
+
+    // ✅ تبدیل reminder → task
+    return (habit.reminders || []).map((time: string) => {
+      const isCompleted = completions.some(
+        (c) =>
+        { const match =
+           c.habitId === habit.id &&
+          c.date === selectedDate &&
+          c.time === time
+          if(match){
+            console.log("Match true", c)
+          }
+          return match;
+        }
+
+      );
+completions.forEach((c) => {
+  console.log("COMPARE:", {
+    c_habitId: c.habitId,
+    habitId: habit.id,
+    c_date: c.date,
+    selectedDate,
+    c_time: c.time,
+    time,
+  });
+});
+      const task = {
+        id: `${habit.id}-${selectedDate}-${time}`,
         habitId: habit.id,
         habitName: habit.name,
-        date: instance.date,
-        time: instance.time,
-        completed: instance.completed,
-        startDate: habit.statrtDate,
-      }));
+        date: selectedDate,
+        time,
+        completed: isCompleted,
+        startDate: habit.startDate,
+      };
+      return{...task};
+    });
   });
 };
 
